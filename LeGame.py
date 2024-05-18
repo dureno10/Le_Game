@@ -1,5 +1,6 @@
 import random
 import json
+import matplotlib.pyplot as plt
 
 class Character:
     def __init__(self, name, health, attack):
@@ -14,13 +15,14 @@ class Character:
         self.health-=damage
         if self.health<0:
             self.health=0
-            #if "Dinosaur" == self.enemy.name():
-                #defense_charge()
 
     def attack_target(self,target):
         damage = max(0, self.attack)
         target.take_damage(damage)
         print(f"{self.name} attacks {target.name} for {damage} damage!")
+
+    def __str__(self):
+        return f"Name: {self.name}, Health: {self.health}, Attack: {self.attack}"
 
 class Dinosaur(Character):
     def __init__(self, name, health, attack, shield_health):
@@ -30,7 +32,7 @@ class Dinosaur(Character):
         if self.shield_health>0:
             if self.shield_health>=damage:
                 self.shield_health-=damage
-                print(f"{self.name} shield absorbed {damage} damage.")
+                print(f"\n{self.name} shield absorbed {damage} damage.")
                 print("Remaing Shield Health", self.shield_health)
             else:
                 remaining_damage = damage-self.shield_health
@@ -39,13 +41,9 @@ class Dinosaur(Character):
                 print(f"{self.name} shield breaks")
         else:
             super().take_damage(damage)
-    #def defense_charge(self):
-     #   defense = random.randint(200, 500)
-      #  return defense
-       # defense-=damage
-        #print(defense)
-        #if defense<0:
-         #   defense=0
+    def __str__(self):
+        return f"Name: {self.name}, Health: {self.health}, Attack: {self.attack}"
+
 
 class Robot(Character):
     def __init__(self, name, health, attack):
@@ -54,17 +52,15 @@ class Robot(Character):
     def take_damage(self, damage):
         i = random.randint(1,10)
         if i%3==0:
-            print(f"{self.name} evaded your attack!")
+            print(f"\n{self.name} evaded your attack!")
             self.health-=damage * 0
         else:
             self.health -= damage
             if self.health<0:
                 self.health=0
-    #def roger_dodger(self):
-     #   i=random.randint(1,10)
-      #  if i % 3 == 0:
-       #     da_defense = player.attack_target(enemy)
-        #    dodges = da_defense * 0
+    def __str__(self):
+        return f"Name: {self.name}, Health: {self.health}, Attack: {self.attack}"
+
 
 class Monster(Character):
     def attack_target(self,target):
@@ -72,12 +68,15 @@ class Monster(Character):
         if i %3==0:
             damage = self.attack*2
             target.take_damage(damage)
-            print(f"{self.name} attacks {target.name} for {damage} critical damage!")
+            print(f"\n{self.name} attacks {target.name} for {damage} critical damage!")
         else:
             damage = max(0, self.attack)
             target.take_damage(damage)
             print(f"{self.name} attacks {target.name} for {damage} damage!")
+    def __str__(self):
+        return f"Name: {self.name}, Health: {self.health}, Attack: {self.attack}"
 
+player_list=[]
 player = Character("Player", 5000, 100)
 
 def generate_enemy():
@@ -100,14 +99,17 @@ def generate_enemy():
         return Monster(name, health, attack)
 
 le_level= 1
-
+enemy_list=[]
+second_elist=[]
 def level():
     global le_level
     print(f"\n== Level {le_level} ==")
     enemy = generate_enemy()
+    enemy_list.append(enemy)
+    second_elist.append(str(enemy))
     print(f"{enemy.name} has appeared")
     while player.is_alive() and enemy.is_alive():
-        print(f"Your HP: {player.health} | {enemy.name}'s HP: {enemy.health}")
+        print(f"\nYour HP: {player.health} | {enemy.name}'s HP: {enemy.health}")
         action = input("What will you do? (attack/flee): ".lower())
         if action == "attack":
             player.attack_target(enemy)
@@ -117,19 +119,14 @@ def level():
             print("You fled from the battle!")
             homepage()
             break
-
-
         else:
-            print("Invalid Choice! Choose 'attack' or 'flee'.")
-    #else:
-     #   if player.is_alive() and isinstance(enemy, Dinosaur):
-      #      enemy.defense_charge()
-       #     homepage()
+            print("\nInvalid Choice! Choose 'attack' or 'flee'.")
 
     else:
         if player.is_alive():
-            print(f"You defeated {enemy.name}")
+            print(f"\nYou defeated {enemy.name}")
             le_level += 1
+            player_list.append(player.health)
             if le_level == 6:
                 print(f"\n====You've Won the Game!====")
                 print("Press 1 to quit")
@@ -144,9 +141,9 @@ def level():
             print("You Died")
             homepage()
 def homepage():
-    print("Welcome to the Jungle! You must fight 5 rounds to survive!")
+    print(f"\nWelcome to the Jungle! You must fight 5 rounds to survive!")
     print("What would you like to do?")
-    user_inp=input(" 1. Fight!\n 2. Store\n 3. Save Game\n")
+    user_inp=input(" 1. Fight!\n 2. Store\n 3. Save Game\n 4. Game Stats\n 5. Extras\n")
     if user_inp == "1":
         level()
     elif user_inp == "2":
@@ -154,6 +151,10 @@ def homepage():
     elif user_inp == "3":
         game_save()
         homepage()
+    elif user_inp == "4":
+        gamestats()
+    elif user_inp == "5":
+        extra()
     else:
         print("Invalid Choice")
         homepage()
@@ -187,6 +188,7 @@ def game_save(player, backpack, file_path):
     with open(file_path, "w") as json.file:
         json.dump(game_data,json_file, indent=4)
 def item_description():
+    print(f"\n====INVENTORY====")
     for item in backpack:
         print("Name: ", item.get("name"))
         print("Description: ", item.get("description"))
@@ -201,7 +203,7 @@ def item_remove():
 
 
 def store():
-    print("Welcome to the store!")
+    print(f"\nWelcome to the store!")
     print("Here, you can equip and unequip items that can help you in your battles")
     store_input=input(" 1. Equip item\n 2. Check Inventory\n 3. Go Back ")
     if store_input == "1":
@@ -209,10 +211,13 @@ def store():
     elif store_input == "2":
         item_description()
         print("Would you like to remove an item?")
-        question = input(" 1. yes\n 2. no")
+        question = input(" 1. yes\n 2. no\n")
         if question=="1":
             item_remove()
+        elif question=='2':
+            store()
         else:
+            print("Invalid Choice")
             store()
     elif store_input == "3":
         homepage()
@@ -221,11 +226,11 @@ def store():
         store()
 
 def shop_menu():
-    print("This is the shop menu, you can take whatever you like to help you win")
+    print(f"\nThis is the shop menu, you can take whatever you like to help you win")
     print("Different types of items will either help with your health or attack")
     print("'Healing' and 'Food' items will help heal your health by a varying amount")
     print("'Magic' and 'Weapons' will help increase your attack")
-    shp_inp = input("Please make a selection:\n 1. Health\n 2. Attack\n")
+    shp_inp = input(f"\nPlease make a selection:\n 1. Health\n 2. Attack\n")
     if shp_inp == "1":
         random.choice(health_itm)
         added_item = backpack.append(random.choice(health_itm))
@@ -241,15 +246,53 @@ def shop_menu():
     else:
         print("Invalid Choice")
         shop_menu()
-#import json, ask player what type of item they would like to buy, have it get random item
-#item stored to backpack, if magic in bag, character health+5?
-#make an exit
 
-#make for loop that makes user play 5 times, have health carry over to next fight
+def gamestats():
+    #print(second_elist)
+    enemies_info = [(enemy.name, enemy.attack) for enemy in enemy_list]
+    #enemies_info = [enemy for enemy in enemy_list if isinstance(enemy, Character)]
+    enemy_names = [info[0] for info in enemies_info]
+    enemy_attacks = [info[1] for info in enemies_info]
+
+    plt.figure(figsize=(12,6))
+    plt.subplot(1,2,1)
+    plt.bar(enemy_names,enemy_attacks, color='blue')
+    plt.xlabel('Enemies')
+    plt.ylabel('Attack')
+    plt.title('enemy Attack')
+
+    plt.figure(figsize=(10,5))
+    plt.plot(player_list, marker='o', linestyle='-', color='red')
+    plt.xlabel('Level')
+    plt.ylabel('Player Health')
+    plt.title('Player Health')
+    plt.show()
+
+    print(player_list)
+    print(enemies_info)
+    plt.tight_layout()
+    plt.show()
+
+    homepage()
+
+def extra():
+    print(f"\nThere's nothing here.\nIt's just an excuse so I can add the lambda functions.")
+    lol= lambda a, b, c: a / b * c
+    print("This is what one lambda function looks like:")
+    print("lol= lambda a, b, c: a / b * c")
+    print(lol(3,4,8))
+    bruh= lambda t, u, v: t+u-v
+    print("This is what the other lambda function looks like:")
+    print("bruh= lambda t, u, v: t+u-v")
+    print(bruh(52,89,77))
+    goback=input("Press any number or QWERTY key to go to Main Menu")
+    if goback == "1":
+        homepage()
+    else:
+        homepage()
 
 def main():
     homepage()
-
 if __name__ == "__main__":
     main()
 
